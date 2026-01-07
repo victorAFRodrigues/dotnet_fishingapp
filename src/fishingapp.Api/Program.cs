@@ -66,7 +66,7 @@ app.MapGet("/user", async (UserService userService) =>
     return Results.Ok(user);
 });
 
-// Aplica migrations pendentes automaticamente
+// Aplica migrations pendentes automaticamenteee
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();

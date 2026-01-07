@@ -1,8 +1,33 @@
+
+using fishingapp.Api.Application.Services;
+using fishingapp.Api.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+// DI AppDbContext 
+var baseDbPath = builder.Environment.ContentRootPath.Replace(@"\src\fishingapp.Api", "");
+
+var dbPath = Path.Combine(
+    baseDbPath,
+    "database",
+    "database.db"
+);
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+{
+    options.UseSqlite($"Data Source={dbPath}");
+    
+    
+});
+
+builder.Services.AddScoped<UserService>();
+
 
 var app = builder.Build();
 
@@ -29,9 +54,24 @@ app.MapGet("/weatherforecast", () =>
                     summaries[Random.Shared.Next(summaries.Length)]
                 ))
             .ToArray();
+
+        
         return forecast;
     })
     .WithName("GetWeatherForecast");
+
+app.MapGet("/user", async (UserService userService) =>
+{
+    var user = await userService.CreateUserAndAddress();
+    return Results.Ok(user);
+});
+
+// Aplica migrations pendentes automaticamente
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    dbContext.Database.Migrate();
+}
 
 app.Run();
 

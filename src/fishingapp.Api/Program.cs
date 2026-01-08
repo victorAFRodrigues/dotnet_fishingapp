@@ -22,8 +22,6 @@ var dbPath = Path.Combine(
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseSqlite($"Data Source={dbPath}");
-    
-    
 });
 
 builder.Services.AddScoped<UserService>();

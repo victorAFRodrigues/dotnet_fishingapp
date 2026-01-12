@@ -10,15 +10,18 @@ public class FishingTrip
     public TripStatus Status { get; private set; }
     
     //relacionamentos 
-    // public Guid FishingSpotId { get; private set; }
-    // public List<Guid> UsersId { get; private set; }
-    // public Guid GuideId { get; private set; }
-    // public List<Guid> TripExpensesId { get; private set; }
     public FishingSpot FishingSpot { get; private set; } //uma percaria deve apenas ter um local de pesca
-    public List<User> Users { get; private set; } //uma pescaria pode ter varios pescadores envolvidos
     public Guide Guide { get; private set; } //uma pescaria pode ter apenas um guia/barqueiro
     public FishingSpotType FishingSpotType { get; private set; } //uma pescaria pode ser apenas de um tipo
-    public List<TripExpense> TripExpenses { get; private set; } //uma pescaria pode ter muitas despesas
+    
+    //uma pescaria pode ter muitas despesas
+    private readonly List<TripExpense> _tripExpenses;
+    public IReadOnlyCollection<TripExpense> TripExpenses => _tripExpenses;
+    
+    //uma pescaria pode ter varios pescadores envolvidos
+    private readonly List<User> _users;
+    public IReadOnlyCollection<User> Users => _users;
+    
     private FishingTrip() { }
 
     public FishingTrip(TripStatus tripStatus, FishingSpot fishingSpot, List<User> users, Guide guide, FishingSpotType fishingSpotType, List<TripExpense> tripExpenses)
@@ -26,23 +29,36 @@ public class FishingTrip
         Id = Guid.NewGuid();
         Status = tripStatus;
         FishingSpot = fishingSpot;
-        Users = users;
         Guide = guide;
         FishingSpotType = fishingSpotType;
-        TripExpenses = tripExpenses;
-        TotalExpense = CalculateTotalExpense(TripExpenses);
-        Date = DateTime.Now;
+        _users = users ?? new();
+        _tripExpenses = tripExpenses ?? new();
+        Date = DateTime.UtcNow;
+        
+        CalculateTotalExpense();
     }
 
-    private decimal CalculateTotalExpense(List<TripExpense> tripExpenses)
+    private void CalculateTotalExpense()
     {   
-        decimal totalExpense = 0;
-        
-        foreach(TripExpense expense in tripExpenses)
-        {
-            totalExpense += expense.Value;
-        }
-        
-        return totalExpense;
+        TotalExpense = _tripExpenses.Sum(e => e.Value);
     }
+    
+    public void AddExpense(TripExpense expense)
+    {
+        _tripExpenses.Add(expense);
+        TotalExpense += expense.Value;
+    }
+
+    public void RemoveExpense(TripExpense expense)
+    {
+        if(_tripExpenses.Remove(expense)) TotalExpense -= expense.Value;
+    }
+    
+    public void ChangeTripStatus(TripStatus tripStatus)
+    {
+        if (Status == TripStatus.Finished) throw new InvalidOperationException("Trip already finished."); 
+        
+        Status = tripStatus;
+    }
+
 }

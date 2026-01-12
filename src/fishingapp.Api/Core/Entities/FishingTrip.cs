@@ -10,33 +10,37 @@ public class FishingTrip
     public TripStatus Status { get; private set; }
     
     //relacionamentos 
-    public Guid FishingSpotId { get; private set; }
-    public List<Guid> UsersId { get; private set; }
-    public Guid GuideId { get; private set; }
-    public FishingSpotType FishingSpotType { get; private set; }
-    public List<Guid> TripExpensesId { get; private set; }
-    public List<TripExpense> TripExpenses { get; private set; }
+    // public Guid FishingSpotId { get; private set; }
+    // public List<Guid> UsersId { get; private set; }
+    // public Guid GuideId { get; private set; }
+    // public List<Guid> TripExpensesId { get; private set; }
+    public FishingSpot FishingSpot { get; private set; } //uma percaria deve apenas ter um local de pesca
+    public List<User> Users { get; private set; } //uma pescaria pode ter varios pescadores envolvidos
+    public Guide Guide { get; private set; } //uma pescaria pode ter apenas um guia/barqueiro
+    public FishingSpotType FishingSpotType { get; private set; } //uma pescaria pode ser apenas de um tipo
+    public List<TripExpense> TripExpenses { get; private set; } //uma pescaria pode ter muitas despesas
     private FishingTrip() { }
 
-    public FishingTrip(TripStatus tripStatus, Guid fishingSpotId, List<Guid> usersId, Guid guideId, FishingSpotType fishingSpotType, List<Guid> tripExpensesId)
+    public FishingTrip(TripStatus tripStatus, FishingSpot fishingSpot, List<User> users, Guide guide, FishingSpotType fishingSpotType, List<TripExpense> tripExpenses)
     {
+        Id = Guid.NewGuid();
         Status = tripStatus;
-        FishingSpotId = fishingSpotId;
-        UsersId = usersId;
-        GuideId = guideId;
+        FishingSpot = fishingSpot;
+        Users = users;
+        Guide = guide;
         FishingSpotType = fishingSpotType;
-        TripExpensesId = tripExpensesId;
-        TotalExpense = CalculateTotalExpense(TripExpensesId);
+        TripExpenses = tripExpenses;
+        TotalExpense = CalculateTotalExpense(TripExpenses);
         Date = DateTime.Now;
     }
 
-    private decimal CalculateTotalExpense(List<Guid> tripExpensesId)
+    private decimal CalculateTotalExpense(List<TripExpense> tripExpenses)
     {   
         decimal totalExpense = 0;
         
-        foreach(Guid id in tripExpensesId)
+        foreach(TripExpense expense in tripExpenses)
         {
-            totalExpense += TripExpense.Equal(id).Value;
+            totalExpense += expense.Value;
         }
         
         return totalExpense;
